@@ -1,0 +1,2 @@
+#define SECRET_SSID "BELL610"
+#define SECRET_PASS "C632547D"
