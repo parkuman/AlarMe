@@ -1,6 +1,6 @@
 # AlarMe ⏰
 An alarm clock you can't say no to! App-controlled alarm clock only disabled by an NFC terminal somewhere in your home. Made for MLH Hack At Home
-<img align="center" height="400px" src="./doc/screenshot.jpg" />
+<img align="center" height="400px" src="./doc/screenshot.jpg" style="float: left; margin: 0 auto;"/>
 
 ## How does it work?
 7:59am, you're fast asleep. 💤
