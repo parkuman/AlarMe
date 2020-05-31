@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:analog_clock/analog_clock.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
 
 import '../main.dart';
 import '../models/clock_server.dart';
+
+import './connected_page.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key key, this.title}) : super(key: key);
@@ -17,43 +20,42 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   Socket _socket;
-  String _text = "";
+  String _connectionText = "";
+  String _lastAlarm = "";
 
   void _connect() {
-    
-    
     _socket = getIt<ClockServer>().socket;
     setState(() {
       _socket != null
-          ? _text = "${_socket.address.address} - ${_socket.port}"
-          : _text = "not connected";
+          ? _connectionText =
+              "Connected to clock @ ${_socket.address.address} port: ${_socket.port}"
+          : _connectionText = "not connected";
     });
   }
 
   void _disconnect() {
     _socket.close();
-    _socket = getIt<ClockServer>().socket;
+    _socket = null;
+  }
+
+  void _readLastAlarm() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastHourKey = 'last_hour';
+    final lastMinuteKey = 'last_minute';
+    final lastHour = prefs.getInt(lastHourKey) ?? 0;
+    final lastMinute = prefs.getInt(lastMinuteKey) ?? 0;
     setState(() {
-      _socket != null
-          ? _text = "${_socket.address.address} - ${_socket.port}"
-          : _text = "not connected";
+      _lastAlarm = "${lastHour.toString().padLeft(2, '0')}:${lastMinute.toString().padLeft(2, '0')} ${lastHour > 12 ? "p.m." : "a.m."}";
     });
+
+    print('last alarm HH/MM: $lastHour:$lastMinute');
   }
 
-  void _ledON() {
-    _socket.write("ON\n");
-  }
-
-  void _ledOFF() {
-    _socket.write("OFF\n");
-  }
-
-  void _alarmOn() {
-    _socket.write("ALARM\n");
-  }
-
-  void _alarmOff() {
-    _socket.write("SNOOZE\n");
+  @override
+  void initState() {
+    _connect();
+    _readLastAlarm();
+    super.initState();
   }
 
   @override
@@ -64,17 +66,24 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    _connect();
-
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        centerTitle: true,
+        title: Text(
+          widget.title,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
       body: Center(
         child: Column(
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
+            SizedBox(height: 20.0),
+            Text('$_connectionText'),
+            Text('Last Alarm: $_lastAlarm'),
+            SizedBox(height: 20.0),
             AnalogClock(
               width: MediaQuery.of(context).size.width - 150,
               height: MediaQuery.of(context).size.width - 150,
@@ -86,69 +95,35 @@ class _HomePageState extends State<HomePage> {
               minuteHandColor: Colors.white,
               secondHandColor: Theme.of(context).accentColor,
             ),
-            SizedBox(height: 50.0),
-            Text('$_text'),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                RaisedButton(
-                  onPressed: _connect,
-                  child: Text(
-                    "CONNECT",
-                    style: TextStyle(
-                        fontStyle: FontStyle.italic, color: Colors.white),
-                  ),
-                ),
-                SizedBox(width: 5.0,),
-                RaisedButton(
-                  onPressed: _disconnect,
-                  child: Text(
-                    "DISCONNECT",
-                    style: TextStyle(
-                        fontStyle: FontStyle.italic, color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
-            RaisedButton(
-              onPressed: _ledON,
-              color: Colors.green,
-              child: Text(
-                "ON",
-                style:
-                    TextStyle(fontStyle: FontStyle.italic, color: Colors.white),
-              ),
-            ),
-            RaisedButton(
-              onPressed: _ledOFF,
-              color: Colors.red,
-              child: Text(
-                "OFF",
-                style:
-                    TextStyle(fontStyle: FontStyle.italic, color: Colors.white),
-              ),
-            ),
-            RaisedButton(
-              onPressed: _alarmOn,
-              color: Colors.purple,
-              child: Text(
-                "ALARM",
-                style:
-                    TextStyle(fontStyle: FontStyle.italic, color: Colors.white),
-              ),
-            ),
-            RaisedButton(
-              onPressed: _alarmOff,
-              color: Colors.indigo,
-              child: Text(
-                "SNOOZE",
-                style:
-                    TextStyle(fontStyle: FontStyle.italic, color: Colors.white),
-              ),
-            ),
+            SizedBox(height: 20.0),
+            _socket == null ? connectButton() : ConnectedPage(),
           ],
         ),
       ),
+    );
+  }
+
+  Widget connectButton() {
+    return Column(
+      children: [
+        SizedBox(height: 80.0),
+        RaisedButton(
+          onPressed: _connect,
+          color: Colors.green,
+          child: Container(
+            width: 150.0,
+            height: 100.0,
+            alignment: Alignment.center,
+            child: Text(
+              "CONNECT",
+              style: TextStyle(
+                  fontStyle: FontStyle.italic,
+                  color: Colors.white,
+                  fontSize: 20.0),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -2,7 +2,6 @@ import 'dart:io';
 
 class ClockServer {
   Socket _socket;
-  String _name = "poop";
 
   ClockServer() {
     connect();
@@ -18,8 +17,6 @@ class ClockServer {
 
     print(_socket.toString());
   }
-
-  String get name => _name;
 
   Socket get socket => _socket;
 }
