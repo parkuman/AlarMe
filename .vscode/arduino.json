@@ -1,6 +1,0 @@
-{
-    "programmer": "USBasp",
-    "port": "COM18",
-    "board": "arduino:samd:mkr1000",
-    "sketch": "AlarMe-arduino\\AlarMe\\AlarMe.ino"
-}
