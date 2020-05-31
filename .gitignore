@@ -22,6 +22,7 @@ arduino_secrets.h
 .project
 .settings/
 .vscode/
+.vscode
 
 # Flutter repo-specific
 /bin/cache/
